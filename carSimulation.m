@@ -1,5 +1,5 @@
-function [] = carSimulation()
-for ite = 1:16
+function [] = carSimulation(num)
+for ite = 1:num
     %% 直接基本参数
     % 车辆初始位置距离雷达的水平距离：dis = 50-100m
     disCarRadar = 50+(100-50)*rand;
@@ -36,17 +36,16 @@ for ite = 1:16
     %% 计算运动轨迹以及时频图
     [wheeledata, wheeleT] = wheeledVehicleTrack(wheeleRadius, wheeleWidth, wheeleVelocity, disCarRadar, ...
         lambda, rangeres, radarloc);
-    [wheelecarStft, wheelecarStftImg] = myStft(wheeledata, wheeleT, np, 'wheeled car');
+    wheelecarStftImg = myStft(wheeledata, wheeleT, np, 'wheeled car');
     figure;
     imshow(wheelecarStftImg);
     tmp = strcat(['E:\R.毕业设计\地面运动目标雷达特征提取与智能分类' ...
-        '\数据集\WheeledVehicle\wheelecar'],num2str(ite),'.tif');
-    imwrite(wheelecarStftImg, tmp);
-    
+        '\数据集\WheeledVehicle\wheelecar'], num2str(ite), '.tif');
+    imwrite(wheelecarStftImg, tmp);    
     
     [Trackeddata, TrackedT] = TrackedVehicleTrack(trackRadius, trackLength, trackVelocity, disCarRadar, ...
         lambda, rangeres, radarloc);
-    [TrackedcarStft, TrackedcarStftImg] = myStft(Trackeddata, TrackedT, np, 'Tracked car');
+    TrackedcarStftImg = myStft(Trackeddata, TrackedT, np, 'Tracked car');
     figure;
     imshow(TrackedcarStftImg);
     tmp = strcat(['E:\R.毕业设计\地面运动目标雷达特征提取与智能分类' ...
