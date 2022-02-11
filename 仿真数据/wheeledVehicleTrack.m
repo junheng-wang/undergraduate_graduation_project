@@ -13,65 +13,29 @@ nr = round(2*sqrt((radarloc(1)+disCarRadar+wheeleRadius)^2+radarloc(2)^2+(radarl
 np = 2048;
 % 采样设置------------------------------------------------------------------
 % 每个周期的采样个数：nt = 2048
-% 每个采样点对应的时间向量：t（将实际周期T转换到1）
+% 每个采样点对应的时间向量：t（取0.15s即150ms时间）
 nt = 2048;
-t = 0:1/nt:1-1/nt;
+t = 0:0.5/nt:0.5-0.5/nt;
+% 0.15s前进的距离：movef
+movef = 0.5*wheeleVelocity;
 % 根据距离单元和采样点构造的二维存储数据矩阵：data
 data = zeros(nr, np);
 %% 车轮上散射点的运动坐标
-x00 = disCarRadar:-circum/nt:disCarRadar-circum+circum/nt;
-y00 = zeros(1, length(t));
-z00 = 2*wheeleRadius+zeros(1, length(t));
+coordinateXYZ.P00 = coordinateXYZP0(disCarRadar, wheeleRadius, movef, nt, t);
 
 % 第一个轮胎使用4个散射点进行仿真
-% 第一个散射点P1:初始相位为0
-x11 = wheeleRadius*cos(T*angularVelocity*t)+x00;
-y11 = wheeleWidth+zeros(1, length(t));
-z11 = wheeleRadius+wheeleRadius*sin(T*angularVelocity*t);
-% 第二个散射点P2:初始相位为pi/2
-x12 = wheeleRadius*cos(T*angularVelocity*t+pi/2)+x00;
-y12 = wheeleWidth+zeros(1, length(t));
-z12 = wheeleRadius+wheeleRadius*sin(T*angularVelocity*t+pi/2);
-% 第三个散射点P3:初始相位为pi
-x13 = wheeleRadius*cos(T*angularVelocity*t+pi)+x00;
-y13 = wheeleWidth+zeros(1, length(t));
-z13 = wheeleRadius+wheeleRadius*sin(T*angularVelocity*t+pi);
-% 第四个散射点P1:初始相位为3pi/2
-x14 = wheeleRadius*cos(T*angularVelocity*t+3*pi/2)+x00;
-y14 = wheeleWidth+zeros(1, length(t));
-z14 = wheeleRadius+wheeleRadius*sin(T*angularVelocity*t+3*pi/2);
+[XYZP11, XYZP12, XYZP13, XYZP14] = coordinateXYZP1(wheeleRadius, wheeleWidth, angularVelocity, t);
+coordinateXYZ.P11 = XYZP11+[coordinateXYZ.P00(1,:); zeros(1, np); zeros(1, np)];
+coordinateXYZ.P12 = XYZP12+[coordinateXYZ.P00(1,:); zeros(1, np); zeros(1, np)];
+coordinateXYZ.P13 = XYZP13+[coordinateXYZ.P00(1,:); zeros(1, np); zeros(1, np)];
+coordinateXYZ.P14 = XYZP14+[coordinateXYZ.P00(1,:); zeros(1, np); zeros(1, np)];
 
 % 第二个轮胎使用4个散射点进行仿真
-% 随机初始相位
-theta2 = pi/3;
-% 第一个散射点P1:初始相位为0
-x21 = wheeleRadius*cos(T*angularVelocity*t+theta2)+x00;
-y21 = -wheeleWidth+zeros(1, length(t));
-z21 = wheeleRadius+wheeleRadius*sin(T*angularVelocity*t+theta2);
-% 第二个散射点P2:初始相位为pi/2
-x22 = wheeleRadius*cos(T*angularVelocity*t+pi/2+theta2)+x00;
-y22 = -wheeleWidth+zeros(1, length(t));
-z22 = wheeleRadius+wheeleRadius*sin(T*angularVelocity*t+pi/2+theta2);
-% 第三个散射点P3:初始相位为pi
-x23 = wheeleRadius*cos(T*angularVelocity*t+pi+theta2)+x00;
-y23 = -wheeleWidth+zeros(1, length(t));
-z23 = wheeleRadius+wheeleRadius*sin(T*angularVelocity*t+pi+theta2);
-% 第四个散射点P1:初始相位为3pi/2
-x24 = wheeleRadius*cos(T*angularVelocity*t+3*pi/2+theta2)+x00;
-y24 = -wheeleWidth+zeros(1, length(t));
-z24 = wheeleRadius+wheeleRadius*sin(T*angularVelocity*t+3*pi/2+theta2);
-
-coordinateXYZ.P00 = [x00; y00; z00];
-
-coordinateXYZ.P11 = [x11; y11; z11];
-coordinateXYZ.P12 = [x12; y12; z12];
-coordinateXYZ.P13 = [x13; y13; z13];
-coordinateXYZ.P14 = [x14; y14; z14];
-
-coordinateXYZ.P21 = [x21; y21; z21];
-coordinateXYZ.P22 = [x22; y22; z22];
-coordinateXYZ.P23 = [x23; y23; z23];
-coordinateXYZ.P24 = [x24; y24; z24];
+[XYZP21, XYZP22, XYZP23, XYZP24] = coordinateXYZP2(wheeleRadius, wheeleWidth, angularVelocity, t);
+coordinateXYZ.P21 = XYZP21+[coordinateXYZ.P00(1,:); zeros(1, np); zeros(1, np)];
+coordinateXYZ.P22 = XYZP22+[coordinateXYZ.P00(1,:); zeros(1, np); zeros(1, np)];
+coordinateXYZ.P23 = XYZP23+[coordinateXYZ.P00(1,:); zeros(1, np); zeros(1, np)];
+coordinateXYZ.P24 = XYZP24+[coordinateXYZ.P00(1,:); zeros(1, np); zeros(1, np)];
 
 %% 计算雷达回波
 % 主体散射点回波
@@ -81,7 +45,7 @@ for k = 1:np
     PHs00 = 1*(exp(-1i*4*pi*distances00(k)/lambda));
     data(floor(distances00(k)/rangeres), k) = data(floor(distances00(k)/rangeres), k) + PHs00;  
 end
-Weight = rand(1,8);
+Weight = 0.6*rand(1,8);
 % 第一个轮胎的4个散射点回波
 
 for k = 1:np
@@ -134,4 +98,70 @@ clim = get(gca,'CLim');
 set(gca,'CLim',clim(2) + [-40 0]);
 colorbar;
 drawnow;
+end
+
+% =========================================================================
+function XYZP0 = coordinateXYZP0(disCarRadar, wheeleRadius, movef, nt, t)
+x0 = disCarRadar:-movef/nt:disCarRadar-movef+movef/nt;
+y0 = zeros(1, length(t));
+z0 = 2*wheeleRadius+zeros(1, length(t));
+
+XYZP0 = [x0; y0; z0];
+
+end
+
+% =========================================================================
+function [XYZP11, XYZP12, XYZP13, XYZP14] = coordinateXYZP1(wheeleRadius, wheeleWidth, angularVelocity, t)
+% 随机初始相位
+theta = rand*pi/2;
+% 第一个散射点P1:初始相位为theta
+x11 = wheeleRadius*cos(angularVelocity*t+theta);
+y11 = wheeleWidth+zeros(1, length(t));
+z11 = wheeleRadius+wheeleRadius*sin(angularVelocity*t+theta);
+% 第二个散射点P2:初始相位为theta+pi/2
+x12 = wheeleRadius*cos(angularVelocity*t+(theta+pi/2));
+y12 = wheeleWidth+zeros(1, length(t));
+z12 = wheeleRadius+wheeleRadius*sin(angularVelocity*t+(theta+pi/2));
+% 第三个散射点P3:初始相位为theta+pi/2
+x13 = wheeleRadius*cos(angularVelocity*t+(theta+pi));
+y13 = wheeleWidth+zeros(1, length(t));
+z13 = wheeleRadius+wheeleRadius*sin(angularVelocity*t+(theta+pi));
+% 第四个散射点P1:初始相位为theta+3*pi/2
+x14 = wheeleRadius*cos(angularVelocity*t+(theta+3*pi/2));
+y14 = wheeleWidth+zeros(1, length(t));
+z14 = wheeleRadius+wheeleRadius*sin(angularVelocity*t+(theta+3*pi/2));
+
+XYZP11 = [x11; y11; z11];
+XYZP12 = [x12; y12; z12];
+XYZP13 = [x13; y13; z13];
+XYZP14 = [x14; y14; z14];
+
+end
+
+% =========================================================================
+function [XYZP21, XYZP22, XYZP23, XYZP24] = coordinateXYZP2(wheeleRadius, wheeleWidth, angularVelocity, t)
+% 随机初始相位
+theta = rand*pi/2;
+% 第一个散射点P1:初始相位为theta
+x21 = wheeleRadius*cos(angularVelocity*t+theta);
+y21 = -wheeleWidth+zeros(1, length(t));
+z21 = wheeleRadius+wheeleRadius*sin(angularVelocity*t+theta);
+% 第二个散射点P2:初始相位为theta+pi/2
+x22 = wheeleRadius*cos(angularVelocity*t+(theta+pi/2));
+y22 = -wheeleWidth+zeros(1, length(t));
+z22 = wheeleRadius+wheeleRadius*sin(angularVelocity*t+(theta+pi/2));
+% 第三个散射点P3:初始相位为theta+pi
+x23 = wheeleRadius*cos(angularVelocity*t+(theta+pi));
+y23 = -wheeleWidth+zeros(1, length(t));
+z23 = wheeleRadius+wheeleRadius*sin(angularVelocity*t+(theta+pi));
+% 第四个散射点P1:初始相位为theta+3*pi/2
+x24 = wheeleRadius*cos(angularVelocity*t+(theta+3*pi/2));
+y24 = -wheeleWidth+zeros(1, length(t));
+z24 = wheeleRadius+wheeleRadius*sin(angularVelocity*t+(theta+3*pi/2));
+
+XYZP21 = [x21; y21; z21];
+XYZP22 = [x22; y22; z22];
+XYZP23 = [x23; y23; z23];
+XYZP24 = [x24; y24; z24];
+
 end

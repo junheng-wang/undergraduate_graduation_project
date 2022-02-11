@@ -1,5 +1,6 @@
-function [] = carSimulation(num)
-for ite = 1:num
+function [wheeledata, Trackeddata] = carSimulation()
+% 车辆仿真函数
+    clc; close all;
     %% 直接基本参数
     % 车辆初始位置距离雷达的水平距离：dis = 50-100m
     disCarRadar = 50+(100-50)*rand;
@@ -12,44 +13,35 @@ for ite = 1:num
     wheeleVelocity = 5+(10-5)*rand;    
     % 履带车辆直接参数--------------------------------------------------------------
     % 履带车轮部分的半径：trackRadius = 0.3-0.6m
-    % 履带车水平部分履带长度：trackLength = 2.5
-    % 履带车的速度：trackVelocity = 10
+    % 履带车水平部分履带长度：trackLength = 5-7m
+    % 履带车车宽：trackWidth = 3-4m
+    % 履带车的速度：trackVelocity = 4-10m/s
     trackRadius = 0.3+(0.6-0.3)*rand;
-    trackLength = 2+(2.5-2)*rand;
+    trackLength = 5+(7-5)*rand;
+    trackWidth = 3+(4-3)*rand;
     trackVelocity = 4+(10-4)*rand;    
     
     % 雷达直接参数--------------------------------------------------------------
     % 雷达波长：lambda = 0.02m
     % 雷达的距离分辨率：rangeres = 0.01m
     % 雷达的初始位置坐标：radarloc = [0, 0, 10]
-    lambda = 0.06;
+    lambda = 0.02;
     rangeres = 0.01;
     radarloc = [0, 0, 10];
-    np = 2048;
     
     %% 将初始化参数写入carData.txt文件
-    carfid = fopen('E:\R.毕业设计\地面运动目标雷达特征提取与智能分类\数据集\wheelecarData.txt', 'at');
+    carfid = fopen('E:\A.毕业设计\地面运动目标雷达特征提取与智能分类\数据集\wheelecarData.txt', 'at');
     fprintf(carfid,'%d,%d,%d,%d \n', wheeleRadius, wheeleWidth, wheeleVelocity, disCarRadar);
-    carfid = fopen('E:\R.毕业设计\地面运动目标雷达特征提取与智能分类\数据集\TrackedcarData.txt', 'at');
+    fclose(carfid);
+    carfid = fopen('E:\A.毕业设计\地面运动目标雷达特征提取与智能分类\数据集\TrackedcarData.txt', 'at');
     fprintf(carfid,'%d,%d,%d,%d \n', trackRadius, trackLength, trackVelocity, disCarRadar);
+    fclose(carfid);
     
     %% 计算运动轨迹以及时频图
-    [wheeledata, wheeleT] = wheeledVehicleTrack(wheeleRadius, wheeleWidth, wheeleVelocity, disCarRadar, ...
+    [wheeledata, ~] = wheeledVehicleTrack(wheeleRadius, wheeleWidth, wheeleVelocity, disCarRadar, ...
         lambda, rangeres, radarloc);
-    wheelecarStftImg = myStft(wheeledata, wheeleT, np, 'wheeled car');
-    figure;
-    imshow(wheelecarStftImg);
-    tmp = strcat(['E:\R.毕业设计\地面运动目标雷达特征提取与智能分类' ...
-        '\数据集\WheeledVehicle\wheelecar'], num2str(ite), '.tif');
-    imwrite(wheelecarStftImg, tmp);    
-    
-    [Trackeddata, TrackedT] = TrackedVehicleTrack(trackRadius, trackLength, trackVelocity, disCarRadar, ...
+       
+    [Trackeddata, ~] = trackedVehicleTrack(trackRadius, trackLength, trackVelocity, trackWidth, disCarRadar, ...
         lambda, rangeres, radarloc);
-    TrackedcarStftImg = myStft(Trackeddata, TrackedT, np, 'Tracked car');
-    figure;
-    imshow(TrackedcarStftImg);
-    tmp = strcat(['E:\R.毕业设计\地面运动目标雷达特征提取与智能分类' ...
-        '\数据集\TrackedVehicle\Trackedcar'],num2str(ite),'.tif');
-    imwrite(TrackedcarStftImg, tmp);
-end
+
 end

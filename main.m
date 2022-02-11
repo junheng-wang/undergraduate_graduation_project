@@ -1,23 +1,41 @@
 clc; clear; close all;
-%% 车辆仿真
-% 仿真数量：num = 16
-num = 16;
-carSimulation(num);
-
-
-
+%% 划分数据集——训练集70%，测试集：30%
+num = 60; % 总数据的数量
+trainnum = round(num*0.7);
+testnum = num - trainnum;
+% 读取txt
+filename = 'E:\A.毕业设计\地面运动目标雷达特征提取与智能分类\数据集\mydataset.txt';
+temp = readtable(filename, 'ReadVariableNames', false, 'Delimiter', ',' );
+% 获取训练集标签
+trainLabel = temp{1:trainnum, 2};
+% 获取测试集标签
+testLabel = temp{trainnum+1:num, 2};
+% 计算特征并保持
+carfid = fopen('E:\A.毕业设计\地面运动目标雷达特征提取与智能分类\数据集\carFeature.txt', 'at');
+for ite = 1:num
+    img = double(imread(temp{ite, 1}{1, :}));
+    % 复合不变矩特征
+%     [varphi1, varphi2, varphi3, varphi4, varphi5] = calfeature(img);
+%     fprintf(carfid,'%d,%d,%d,%d,%d\n', varphi1, varphi2, varphi3, varphi4, varphi5);
+    % 熵信息、灰度共生矩阵
+    [varphi1, varphi2, varphi3, varphi4, varphi5] = feature2(img);
+    fprintf(carfid,'%d,%d,%d,%d,%d\n', varphi1, varphi2, varphi3, varphi4, varphi5);
+end
+fclose(carfid);
 
 %% 模型评价指标
-% 第一：绘制混淆矩阵
-clc; clear; close all;
-data = [176, 70; 180, 80; 185, 85; 177, 78; 190, 88; 165, 50;
-    161, 45; 163, 47; 160, 44; 166, 49; 168, 50; 162, 44];
-label = [1; 1; 1; 1; 1; 1; 2; 2; 2; 2; 2; 2];
-model = svmtrain(label, data, '-s 0 -t 2 -c 1 -g 0.1');
-testdata = [190, 85; 164, 49; 178, 77; 195,91;
-    160, 44; 161, 44; 161, 46; 159, 43; 155, 44];
-testdatalabel = [1; 1; 1; 1; 2; 2; 2; 2; 2];
-[predict_label, acc, dec_values] = svmpredict(testdatalabel, testdata, model);
+% 第一：使用libsvm进行分类
+filename = 'E:\A.毕业设计\地面运动目标雷达特征提取与智能分类\数据集\carFeature.txt';
+carfeature = load(filename);
+% 训练、测试特征并特征归一化
+traincarfeature = carfeature(1:trainnum, :);
+testcarfeature = carfeature(trainnum+1:num, :);
+model = svmtrain(trainLabel, traincarfeature, '-s 0 -t 0 -c 1 -g 0.1');
+[predict_label, acc, dec_values] = svmpredict(testLabel, testcarfeature, model);
+
+ttt = carfeature(:,1);
+scatter(1:60, ttt);
+text(1:60, ttt,arrayfun(@(x)['  ' num2str(x)], [trainLabel; testLabel]', 'UniformOutput',0));
 
 % 分类指标构建
 
@@ -33,24 +51,21 @@ testdatalabel = [1; 1; 1; 1; 2; 2; 2; 2; 2];
 % name_class   ：这个参数代表了每个类的名字，
 %                例如我在分类代码中写name_class={'1','2','3','4','5','6','7','8'};
 %                意味着我的第一类叫 1，这个参数三和参数二要对应。
-
-num_in_class = [4, 5];
-name_class = {'1', '2'};
-% 绘制混淆矩阵
-[confusion_matrix] = compute_confusion_matrix( ...
-    predict_label', num_in_class, name_class);
-model = svmtrain(heart_scale_label, heart_scale_inst, '-c 1 -g 0.07');
-[predict_label, accuracy, dec_values] = svmpredict(heart_scale_label, heart_scale_inst,model);
-
-% 第二：绘制ROC值并计算AUC
-[X,Y,T,AUC,OPTROCPT] = perfcurve(heart_scale_label, dec_values, '1');
-%[X,Y] = perfcurve(labels,scores,posclass,'param1', val1,'param2',val2,...)
-%labels:目标标签 scores:决策值 posclass：正类标签
-%'param'和val可以定义X和Y的输出值，具体可以看函数帮助，默认是定义X轴为FPR，Y轴为TPR
-figure;
-plot(X,Y);
-hold on;
-plot(OPTROCPT(1),OPTROCPT(2),'ro');
-xlabel('FPR');
-ylabel('TPR');
-title('输出ROC曲线')
+% 
+% num_in_class = [10, 8];
+% name_class = {'1', '2'};
+% % 第二：绘制混淆矩阵
+% [confusion_matrix] = compute_confusion_matrix( ...
+%     predict_label', num_in_class, name_class);
+% % 第三：绘制ROC值并计算AUC
+% [X,Y,T,AUC,OPTROCPT] = perfcurve(heart_scale_label, dec_values, '1');
+% %[X,Y] = perfcurve(labels,scores,posclass,'param1', val1,'param2',val2,...)
+% %labels:目标标签 scores:决策值 posclass：正类标签
+% %'param'和val可以定义X和Y的输出值，具体可以看函数帮助，默认是定义X轴为FPR，Y轴为TPR
+% figure;
+% plot(X,Y);
+% hold on;
+% plot(OPTROCPT(1),OPTROCPT(2),'ro');
+% xlabel('FPR');
+% ylabel('TPR');
+% title('输出ROC曲线')
