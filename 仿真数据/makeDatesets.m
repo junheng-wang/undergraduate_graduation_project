@@ -8,10 +8,21 @@ for ite = 1:num
     % 得到回波并添加噪声
     tempw = sum(wheeledata); 
     echoSignalw(ite, :) = awgn(tempw, 15);    % 信噪比30db
-    
+    % 保存时域回波信号
+    tmp = strcat(['E:\A.毕业设计\地面运动目标雷达特征提取与智能分类' ...
+        '\数据集\WheeledVehicle\echoSignalw'], num2str(ite), '.mat');
+    tmpechoSignalw = echoSignalw(ite, :);
+    save(tmp, 'tmpechoSignalw');
+
     tempt = sum(Trackeddata); 
     echoSignalt(ite, :) = awgn(tempt, 15);    % 信噪比30db
+    % 保存时域回波信号
+    tmp = strcat(['E:\A.毕业设计\地面运动目标雷达特征提取与智能分类' ...
+        '\数据集\TrackedVehicle\echoSignalt'],num2str(ite),'.mat');
+    tmpechoSignalt = echoSignalt(ite, :);
+    save(tmp, 'tmpechoSignalt');
 end
+
 
 %% 时频图
 % 方法1：使用STFT算法
@@ -42,7 +53,7 @@ for ite = 1:num
     imwrite(TFDiagramt, tmp);
 end
 
-%% 制作路径+类别的csv文件
+%% 制作路径+类别的txt文件
 % 轮式车标签：classw = 1，履带车标签：classt = 2;
 classw = 1;
 classt = 2;
@@ -55,15 +66,24 @@ for ite = 1:num
         'TrackedVehicle\Trackedcar', num2str(ite), '.tif'];
     mydata{ite+num, :} = {strt, classt};
 
+    strechow = ['E:\A.毕业设计\地面运动目标雷达特征提取与智能分类\数据集\' ...
+        'WheeledVehicle\echoSignalw', num2str(ite), '.mat'];
+    mydataecho{ite, :} = {strechow, classw};
+    strechot = ['E:\A.毕业设计\地面运动目标雷达特征提取与智能分类\数据集\' ...
+        'TrackedVehicle\echoSignalt', num2str(ite), '.mat'];
+    mydataecho{ite+num, :} = {strechot, classt};
 end
 % 打乱顺序
 numRandom = randperm(num*2);
 %
 carfid = fopen('E:\A.毕业设计\地面运动目标雷达特征提取与智能分类\数据集\mydataset.txt', 'at');
+carfidEcho = fopen('E:\A.毕业设计\地面运动目标雷达特征提取与智能分类\数据集\mydatasetEcho.txt', 'at');
 for ite = 1:num*2
     fprintf(carfid, '%s, %d \n', mydata{numRandom(ite),1}{1,1}, mydata{numRandom(ite),1}{1,2});
+    fprintf(carfidEcho, '%s, %d \n', mydataecho{numRandom(ite),1}{1,1}, mydataecho{numRandom(ite),1}{1,2});
 end
 fclose(carfid);
+fclose(carfidEcho);
 
 
 

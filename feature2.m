@@ -22,5 +22,4 @@ varphi5 = properties.Homogeneity;
 % 'Energy'——能量
 % 'Homogeneity'——均匀性
 
-
 end
