@@ -1,25 +1,26 @@
 clc; clear; close all;
 %% 车辆仿真
 % 轮式车、履带车各仿真：num = 30个
-num = 30;
+num = 10;
 % carSimulate：仿真函数，其返回值为：位移距离图像
 for ite = 1:num
     [wheeledata, Trackeddata] = carSimulation();
     % 得到回波并添加噪声
     tempw = sum(wheeledata); 
-    echoSignalw(ite, :) = awgn(tempw, 15);    % 信噪比30db
+    echoSignalw(ite, :) = awgn(tempw, -15);    % 信噪比30db
     % 保存时域回波信号
     tmp = strcat(['E:\A.毕业设计\地面运动目标雷达特征提取与智能分类' ...
         '\数据集\WheeledVehicle\echoSignalw'], num2str(ite), '.mat');
-    tmpechoSignalw = echoSignalw(ite, :);
+    tmpechoSignalw = myMTI(0.15, echoSignalw(ite, :));
     save(tmp, 'tmpechoSignalw');
 
     tempt = sum(Trackeddata); 
-    echoSignalt(ite, :) = awgn(tempt, 15);    % 信噪比30db
+    echoSignalt(ite, :) = awgn(tempt, -15);    % 信噪比30db
     % 保存时域回波信号
     tmp = strcat(['E:\A.毕业设计\地面运动目标雷达特征提取与智能分类' ...
         '\数据集\TrackedVehicle\echoSignalt'],num2str(ite),'.mat');
-    tmpechoSignalt = echoSignalt(ite, :);
+    tmpechoSignalt = myMTI(0.15, echoSignalt(ite, :));
+%     tmpechoSignalt = echoSignalt(ite, :);
     save(tmp, 'tmpechoSignalt');
 end
 

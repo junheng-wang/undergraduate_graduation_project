@@ -1,6 +1,6 @@
 clc; clear; close all;
 %% 划分数据集——训练集70%，测试集：30%
-num = 60; % 总数据的数量
+num = 20; % 总数据的数量
 trainnum = round(num*0.7);
 testnum = num - trainnum;
 % 读取txt
@@ -40,9 +40,9 @@ testcarfeature = carfeature(trainnum+1:num, :);
 model = svmtrain(trainLabel, traincarfeature, '-s 0 -t 0 -c 1 -g 0.1');
 [predict_label, acc, dec_values] = svmpredict(testLabel, testcarfeature, model);
 
-ttt = carfeature(:,1);
-scatter(1:60, ttt);
-text(1:60, ttt,arrayfun(@(x)['  ' num2str(x)], [trainLabel; testLabel]', 'UniformOutput',0));
+% ttt = carfeature(:,1);
+% scatter(1:60, ttt);
+% text(1:60, ttt,arrayfun(@(x)['  ' num2str(x)], [trainLabel; testLabel]', 'UniformOutput',0));
 
 % 分类指标构建
 
@@ -59,11 +59,13 @@ text(1:60, ttt,arrayfun(@(x)['  ' num2str(x)], [trainLabel; testLabel]', 'Unifor
 %                例如我在分类代码中写name_class={'1','2','3','4','5','6','7','8'};
 %                意味着我的第一类叫 1，这个参数三和参数二要对应。
 % 
-num_in_class = [7, 11];
-name_class = {'1', '2'};
-% 第二：绘制混淆矩阵
-[confusion_matrix] = compute_confusion_matrix( ...
-    predict_label', num_in_class, name_class);
+compute_confusion_matrix(testLabel,predict_label);
+
+% num_in_class = [6, 12];
+% name_class = {'1', '2'};
+% % 第二：绘制混淆矩阵
+% [confusion_matrix] = compute_confusion_matrix( ...
+%     predict_label', num_in_class, name_class);
 % % 第三：绘制ROC值并计算AUC
 % [X,Y,T,AUC,OPTROCPT] = perfcurve(testLabel, dec_values, '1');
 % %[X,Y] = perfcurve(labels,scores,posclass,'param1', val1,'param2',val2,...)
